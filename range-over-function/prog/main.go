@@ -2,60 +2,8 @@ package main
 
 import (
 	"fmt"
-	"iter"
-	ds "range-over-function/data-structure"
 	"slices"
 )
-
-func makeUnion[E comparable](s1, s2 *ds.Set[E]) *ds.Set[E] {
-	s3 := ds.New[E]()
-	for v := range s1.All() {
-		s3.Add(v)
-	}
-	for v := range s2.All() {
-		s3.Add(v)
-	}
-
-	return s3
-}
-
-// pull iterator로 zip을 구현해보자
-// 여러 개의 슬라이스를 받아서 슬라이스의 각 요소들을 zip한 슬라이스를 하니씩 yield하는 이터레이터 반환
-// func zip
-func Zip[E comparable](s ...iter.Seq[E]) iter.Seq[[]E] {
-	type PullIter[E comparable] struct {
-		next func() (v E, ok bool)
-		stop func()
-	}
-	pullIterSlice := make([]*PullIter[E], 0)
-
-	// pull iter로의 변환
-	for _, v := range s {
-		next, stop := iter.Pull(v)
-		pullIter := &PullIter[E]{next, stop}
-		pullIterSlice = append(pullIterSlice, pullIter)
-	}
-
-	// pull iter를 통해 밸류를 꺼내와서 합치기
-	return func(yield func([]E) bool) {
-		for _, v := range pullIterSlice {
-			defer v.stop()
-		}
-		for {
-			tmp := make([]E, 0)
-			for _, p := range pullIterSlice {
-				v, ok := p.next()
-				if !ok {
-					return
-				}
-				tmp = append(tmp, v)
-			}
-			if !yield(tmp) {
-				return
-			}
-		}
-	}
-}
 
 func main() {
 	s1 := []string{"hello", "jh", "apple"}
